@@ -3,12 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Setting;
-
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
-
-
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,14 +15,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Le indicamos a Laravel que el public_path ahora es public_html
-        //$this->app->usePublicPath(base_path('public_html'));
+        // Detecta automáticamente si el servidor usa 'public_html' (cPanel/CWP);
+        // de lo contrario, mantiene 'public' por defecto (entorno local Laragon).
+        if (is_dir(base_path('public_html'))) {
+            $this->app->usePublicPath(base_path('public_html'));
+        }
     }
 
     /**
      * Bootstrap any application services.
      */
-    // En app/Providers/AppServiceProvider.php
     public function boot(): void
     {
         if (Schema::hasTable('settings')) {
