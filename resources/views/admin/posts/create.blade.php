@@ -1,0 +1,286 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <h2 class="font-bold text-2xl text-brandDark uppercase tracking-widest leading-tight">
+                {{ __('Crear Nuevo Artículo') }}
+            </h2>
+            <a href="{{ route('admin.posts.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
+                <i class="fas fa-arrow-left mr-2"></i> Volver
+            </a>
+        </div>
+    </x-slot>
+
+    <style>
+        .CodeMirror {
+            height: 500px;
+            font-family: monospace;
+            font-size: 14px;
+            border-radius: 0.75rem;
+        }
+    </style>
+
+    <div class="py-8" x-data="mediaModal()">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            <form action="{{ route('admin.posts.store') }}" method="POST" class="space-y-8">
+                @csrf
+
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-brandDark border-b pb-2">Contenido Principal</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Título *</label>
+                            <input type="text" name="title" value="{{ old('title') }}" required class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-brandLight">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">URL (Slug) - Opcional</label>
+                            <input type="text" name="slug" value="{{ old('slug') }}" placeholder="Se genera automático si lo dejas vacío" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-brandLight">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Resumen (Excerpt)</label>
+                        <textarea name="excerpt" rows="2" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-brandLight">{{ old('excerpt') }}</textarea>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-bold uppercase text-gray-500">Cuerpo del Artículo (HTML)</label>
+                            
+                            <div class="flex gap-2">
+                                <button type="button" @click="openModal('', 'copy')" class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold py-1.5 px-3 rounded-lg transition shadow-sm border border-blue-200">
+                                    <i class="fas fa-images"></i> Biblioteca
+                                </button>
+
+                                <button type="button" @click="$dispatch('format-code-page')" class="inline-flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold py-1.5 px-3 rounded-lg transition shadow-sm border border-purple-200">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Ordenar Código
+                                </button>
+                            </div>
+                        </div>
+
+                        <div x-data="codeEditor()" @format-code-page.window="format()" class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                            <textarea x-ref="textarea" name="content" class="hidden"></textarea>
+                            <script type="application/json" x-ref="initialData">
+                                {!! json_encode(old('content')) !!}
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-brandDark border-b pb-2">Multimedia y Estado</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Imagen de Portada (URL)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="featured_image" name="featured_image" value="{{ old('featured_image') }}" placeholder="Ej. https://webiconica.com/storage/media/..." class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-brandLight text-sm">
+                                <button type="button" @click="openModal('featured_image')" class="bg-brandDark hover:bg-brandLight text-white px-4 py-3 rounded-xl flex items-center justify-center transition shadow-sm" title="Abrir Biblioteca">
+                                    <i class="fas fa-folder-open"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">Haz clic en la carpeta para elegir una imagen de tu biblioteca.</p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <input type="checkbox" name="is_published" id="is_published" value="1" class="w-5 h-5 text-brandLight rounded focus:ring-brandLight">
+                            <label for="is_published" class="font-bold text-gray-700 cursor-pointer">Publicar artículo inmediatamente</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4">
+                    <a href="{{ route('admin.posts.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-6 py-3 rounded-xl transition text-sm">Cancelar</a>
+                    <button type="submit" class="bg-brandDark hover:bg-brandLight text-white font-bold px-8 py-3 rounded-xl transition text-sm shadow-md">Guardar Artículo</button>
+                </div>
+            </form>
+        </div>
+
+        <div x-show="isModalOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-brandDark/80 backdrop-blur-sm" x-transition>
+            <div class="bg-white rounded-3xl shadow-2xl w-11/12 max-w-5xl h-[80vh] flex flex-col overflow-hidden" @click.away="isModalOpen = false">
+                
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-brandDark uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-images"></i> Biblioteca
+                        <span x-show="isUploading" class="text-xs text-brandLight normal-case tracking-normal ml-2">
+                            <i class="fas fa-spinner fa-spin"></i> Subiendo...
+                        </span>
+                    </h3>
+                    
+                    <div class="flex items-center gap-4">
+                        <label class="cursor-pointer bg-brandDark hover:bg-brandLight text-white px-4 py-2 rounded-xl text-sm font-bold transition shadow-sm">
+                            <i class="fas fa-cloud-upload-alt mr-1"></i> Subir Imagen
+                            <input type="file" multiple class="hidden" @change="uploadFiles">
+                        </label>
+                        
+                        <button type="button" @click="isModalOpen = false" class="text-gray-400 hover:text-red-500 transition text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 bg-gray-50/50 relative">
+                    <div x-show="isLoading" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/80 text-gray-400">
+                        <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                        <p>Cargando biblioteca...</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" x-show="!isLoading">
+                        <template x-for="item in mediaItems" :key="item.url">
+                            <div class="group cursor-pointer bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-brandLight hover:shadow-lg transition relative">
+                                
+                                <button type="button" @click.stop="deleteFile(item.name)" class="absolute top-2 right-2 z-20 bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all shadow-md transform translate-y-2 group-hover:translate-y-0" title="Eliminar archivo">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+
+                                <div class="aspect-square bg-gray-50 flex items-center justify-center relative" @click="selectItem(item.url)">
+                                    <template x-if="item.is_image">
+                                        <img :src="item.url" class="object-cover w-full h-full group-hover:scale-110 transition duration-500">
+                                    </template>
+                                    <template x-if="!item.is_image">
+                                        <i class="fas fa-file text-4xl text-gray-400 group-hover:scale-110 transition duration-500"></i>
+                                    </template>
+                                    
+                                    <div class="absolute inset-0 bg-brandDark/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                        <span class="bg-white text-brandDark px-3 py-1 rounded-full text-xs font-bold shadow-md" x-text="actionType === 'copy' ? 'Copiar URL' : 'Seleccionar'"></span>
+                                    </div>
+                                </div>
+                                <div class="p-2 text-center border-t border-gray-50">
+                                    <p class="text-[10px] text-gray-600 truncate font-semibold" x-text="item.name"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    
+  	<script>
+        function mediaModal() {
+            return {
+                isModalOpen: false,
+                isLoading: false,
+                isUploading: false,
+                mediaItems: [],
+                targetInputId: '',
+                actionType: 'input', 
+                
+                async openModal(target, action = 'input') {
+                    this.targetInputId = target; 
+                    this.actionType = action; 
+                    this.isModalOpen = true; 
+                    
+                    if (this.mediaItems.length === 0) {
+                        await this.fetchMedia();
+                    }
+                },
+
+                // Extraemos la función de cargar para poder reutilizarla al subir o borrar
+                async fetchMedia() {
+                    this.isLoading = true;
+                    try {
+                        let res = await fetch("{{ route('admin.media.api') }}");
+                        this.mediaItems = await res.json();
+                    } catch (error) {
+                        console.error('Error cargando medios:', error);
+                    }
+                    this.isLoading = false;
+                },
+                
+                selectItem(url) {
+                    if (this.actionType === 'copy') {
+                        navigator.clipboard.writeText(url).then(() => {
+                            alert('¡URL copiada al portapapeles! Ya puedes pegarla en tu editor.');
+                            this.isModalOpen = false;
+                        });
+                    } else {
+                        document.getElementById(this.targetInputId).value = url;
+                        this.isModalOpen = false;
+                    }
+                },
+
+                // NUEVA FUNCIÓN: Subir Archivos
+                async uploadFiles(event) {
+                    const files = event.target.files;
+                    if (!files.length) return;
+
+                    this.isUploading = true;
+                    let formData = new FormData();
+                    
+                    // Empaquetamos todos los archivos seleccionados
+                    for (let i = 0; i < files.length; i++) {
+                        formData.append('files[]', files[i]);
+                    }
+                    
+                    // Obtenemos el token de seguridad de Laravel
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    try {
+                        let res = await fetch("{{ route('admin.media.store') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+
+                        // Sin importar si Laravel hace redirect, refrescamos la cuadrícula
+                        await this.fetchMedia();
+                    } catch (error) {
+                        console.error("Error al subir:", error);
+                        alert("Ocurrió un error al subir el archivo.");
+                    }
+
+                    this.isUploading = false;
+                    event.target.value = ''; // Limpiamos el input
+                },
+
+                // NUEVA FUNCIÓN: Eliminar Archivo
+                // NUEVA FUNCIÓN: Eliminar Archivo (Con Method Spoofing para evitar Error 403)
+                async deleteFile(filename) {
+                    if (!confirm("¿Estás seguro de que deseas eliminar permanentemente este archivo?")) return;
+
+                    this.isLoading = true;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    // 1. Armamos los datos como un formulario, agregando el método falso
+                    let formData = new FormData();
+                    formData.append('_method', 'DELETE'); // <--- El truco ninja de Laravel
+                    formData.append('filename', filename);
+
+                    try {
+                        // 2. Enviamos la petición como POST para que el Firewall de Cloudflare/Servidor la deje pasar
+                        let res = await fetch("{{ route('admin.media.destroy') }}", {
+                            method: 'POST', 
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+
+                        if (res.ok) {
+                            await this.fetchMedia(); // Recargamos la cuadrícula tras borrar
+                        } else {
+                            // Si hay error, intentamos leer qué dice el servidor
+                            let errorData = await res.json();
+                            console.error("Error del servidor:", errorData);
+                            alert("No se pudo eliminar el archivo. Revisa la consola para más detalles.");
+                            this.isLoading = false;
+                        }
+                    } catch (error) {
+                        console.error("Error eliminando:", error);
+                        this.isLoading = false;
+                    }
+                }
+            }
+        }
+    </script>
+    
+    @include('admin.posts.partials.editor-js')
+</x-app-layout>
