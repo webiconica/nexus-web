@@ -10,6 +10,7 @@
                         <i class="fa-solid fa-eye"></i> Ver en el sitio
                     </a>
                 @endif
+                @include('admin.partials.ai-generator-modal', ['module' => 'posts'])
                 <a href="{{ route('admin.posts.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
                     <i class="fas fa-arrow-left mr-2"></i> Volver
                 </a>

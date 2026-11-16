@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\Admin\AiContentController;
 
 // RUTA PÚBLICA PRINCIPAL
 Route::get('/', function () {
@@ -81,6 +82,17 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::delete('/media', [MediaController::class, 'destroy'])->name('media.destroy');
     Route::get('/api-media', [MediaController::class, 'apiIndex'])->name('media.api');
+
+    Route::post('/settings/test-ai', [SettingController::class, 'testAiConnection'])->name('settings.test-ai');
+    Route::post('/settings/reset-ai-usage', [SettingController::class, 'resetAiUsage'])->name('settings.reset-ai-usage');
+
+    Route::post('/ai/generate-content', [AiContentController::class, 'generate'])->name('ai.generate');
+
+    Route::post('/ai/generate-module', [AiContentController::class, 'generateModule'])->name('ai.generate-module');
+
+    Route::post('/ai/refine-module', [AiContentController::class, 'refineModule'])->name('ai.refine-module');
+
+    Route::post('/settings/generate-theme', [App\Http\Controllers\Admin\SettingController::class, 'generateTheme'])->name('settings.generate-theme');
 
     // Manual de Uso del CMS
     Route::get('/manual', function () {

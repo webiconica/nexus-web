@@ -50,17 +50,9 @@
 
     <!-- Tailwind CSS (Motor JIT en navegador para soportar cualquier plantilla) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    @if(!empty($globalSettings['tailwind_config_script']))
+        {!! $globalSettings['tailwind_config_script'] !!}
+    @endif
     <style>
         [x-cloak] { display: none !important; }
     </style>

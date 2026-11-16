@@ -4,9 +4,12 @@
             <h2 class="font-bold text-2xl text-brandDark uppercase tracking-widest leading-tight">
                 {{ __('Editar Página: ') }} <span class="text-brandLight">{{ $page->title }}</span>
             </h2>
-            <a href="{{ route('admin.pages.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
-                <i class="fas fa-arrow-left mr-2"></i> Volver
-            </a>
+            <div class="flex items-center gap-3">
+                @include('admin.partials.ai-generator-modal', ['module' => 'pages'])
+                <a href="{{ route('admin.pages.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -41,8 +44,7 @@
                     </div>
 
                     <div>
-                        
-                      	<div class="flex justify-between items-center mb-2">
+                        <div class="flex justify-between items-center mb-2">
                             <label class="block text-xs font-bold uppercase text-gray-500">Contenido HTML / Texto Principal</label>
                             
                             <div class="flex gap-2">
@@ -56,13 +58,7 @@
                             </div>
                         </div>
 
-                        <div x-data="codeEditor()" @format-code-page.window="format()" class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            <textarea x-ref="textarea" name="content" class="hidden"></textarea>
-                            
-                            <script type="application/json" x-ref="initialData">
-                                {!! json_encode(old('content', $page->content)) !!}
-                            </script>
-                        </div>
+                        @include('admin.partials.modular-page-builder', ['initialContent' => old('content', $page->content ?? '')])
                     </div>
                 </div>
 
@@ -190,8 +186,7 @@
 
     </div>
 
-    
-  	<script>
+    <script>
         function mediaModal() {
             return {
                 isModalOpen: false,
@@ -211,7 +206,6 @@
                     }
                 },
 
-                // Extraemos la función de cargar para poder reutilizarla al subir o borrar
                 async fetchMedia() {
                     this.isLoading = true;
                     try {
@@ -235,7 +229,6 @@
                     }
                 },
 
-                // NUEVA FUNCIÓN: Subir Archivos
                 async uploadFiles(event) {
                     const files = event.target.files;
                     if (!files.length) return;
@@ -243,16 +236,14 @@
                     this.isUploading = true;
                     let formData = new FormData();
                     
-                    // Empaquetamos todos los archivos seleccionados
                     for (let i = 0; i < files.length; i++) {
                         formData.append('files[]', files[i]);
                     }
                     
-                    // Obtenemos el token de seguridad de Laravel
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                     try {
-                        let res = await fetch("{{ route('admin.media.store') }}", {
+                        await fetch("{{ route('admin.media.store') }}", {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': csrfToken,
@@ -261,7 +252,6 @@
                             body: formData
                         });
 
-                        // Sin importar si Laravel hace redirect, refrescamos la cuadrícula
                         await this.fetchMedia();
                     } catch (error) {
                         console.error("Error al subir:", error);
@@ -269,24 +259,20 @@
                     }
 
                     this.isUploading = false;
-                    event.target.value = ''; // Limpiamos el input
+                    event.target.value = '';
                 },
 
-                // NUEVA FUNCIÓN: Eliminar Archivo
-                // NUEVA FUNCIÓN: Eliminar Archivo (Con Method Spoofing para evitar Error 403)
                 async deleteFile(filename) {
                     if (!confirm("¿Estás seguro de que deseas eliminar permanentemente este archivo?")) return;
 
                     this.isLoading = true;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                    // 1. Armamos los datos como un formulario, agregando el método falso
                     let formData = new FormData();
-                    formData.append('_method', 'DELETE'); // <--- El truco ninja de Laravel
+                    formData.append('_method', 'DELETE');
                     formData.append('filename', filename);
 
                     try {
-                        // 2. Enviamos la petición como POST para que el Firewall de Cloudflare/Servidor la deje pasar
                         let res = await fetch("{{ route('admin.media.destroy') }}", {
                             method: 'POST', 
                             headers: {
@@ -297,9 +283,8 @@
                         });
 
                         if (res.ok) {
-                            await this.fetchMedia(); // Recargamos la cuadrícula tras borrar
+                            await this.fetchMedia();
                         } else {
-                            // Si hay error, intentamos leer qué dice el servidor
                             let errorData = await res.json();
                             console.error("Error del servidor:", errorData);
                             alert("No se pudo eliminar el archivo. Revisa la consola para más detalles.");

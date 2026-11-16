@@ -4,9 +4,12 @@
             <h2 class="font-bold text-2xl text-brandDark uppercase tracking-widest leading-tight">
                 {{ __('Crear Nueva Página') }}
             </h2>
-            <a href="{{ route('admin.pages.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
-                <i class="fas fa-arrow-left mr-2"></i> Volver
-            </a>
+            <div class="flex items-center gap-3">
+                @include('admin.partials.ai-generator-modal', ['module' => 'pages'])
+                <a href="{{ route('admin.pages.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -54,12 +57,7 @@
                             </div>
                         </div>
 
-                        <div x-data="codeEditor()" @format-code-page.window="format()" class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            <textarea x-ref="textarea" name="content" class="hidden"></textarea>
-                            <script type="application/json" x-ref="initialData">
-                                {!! json_encode(old('content')) !!}
-                            </script>
-                        </div>
+                        @include('admin.partials.modular-page-builder', ['initialContent' => old('content', '')])
                     </div>
                 </div>
 
