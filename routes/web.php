@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Admin\AiContentController;
+use App\Http\Controllers\ChatbotController;
 
 // RUTA PÚBLICA PRINCIPAL
 Route::get('/', function () {
@@ -39,6 +40,10 @@ Route::get('/demo-blade', function () {
     return view('demo-video');
 });
 
+Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])
+    ->middleware('throttle:15,1')
+    ->name('chatbot.message');
+
 // DASHBOARD
 Route::get('/dashboard', function () {
     $leads = Lead::latest()->take(50)->get();
@@ -51,6 +56,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+
 
 // RUTAS DEL PANEL DE ADMINISTRACIÓN
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {

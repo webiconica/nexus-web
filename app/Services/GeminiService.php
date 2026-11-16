@@ -32,8 +32,8 @@ class GeminiService
                 'input_per_1m' => 0.15,
                 'output_per_1m' => 0.60,
             ],
-            'gemini-2.5-flash-lite' => [
-                'label' => 'Gemini 2.5 Flash-Lite (Ultra Económico - Ideal Chatbot)',
+            'gemini-3.5-flash-lite' => [
+                'label' => 'Gemini 3.5 Flash-Lite (Ultra Económico - Ideal Chatbot)',
                 'input_per_1m' => 0.075,
                 'output_per_1m' => 0.30,
             ],
@@ -94,9 +94,11 @@ class GeminiService
             ?: Setting::where('key', 'ai_default_model')->value('value')
             ?: 'gemini-3.8-flash';
 
-        // Reemplazo automático si la BD aún tiene guardado el modelo retirado
+        // Reemplazo automático si la BD aún tiene modelos retirados
         if ($selectedModel === 'gemini-2.5-flash') {
             $selectedModel = 'gemini-3.8-flash';
+        } elseif ($selectedModel === 'gemini-2.5-flash-lite') {
+            $selectedModel = 'gemini-3.5-flash-lite';
         }
 
         $generationConfig = [

@@ -259,5 +259,6 @@
     @include('partials.app-scripts')
 
     @if(isset($globalSettings['body_end_scripts']) && !empty(trim($globalSettings['body_end_scripts']))){!! trim($globalSettings['body_end_scripts']) !!}@endif
+    @include('partials.chatbot-widget')
 </body>
 </html>

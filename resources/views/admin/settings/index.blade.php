@@ -38,7 +38,7 @@
                             <i class="fa-solid fa-code mr-1"></i> Scripts
                         </button>
                         <button type="button" @click.prevent="activeTab = 'ia'" :class="activeTab === 'ia' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-1 border-b-2 font-bold text-sm uppercase tracking-wider transition-colors flex items-center gap-1.5">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Motor IA
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Motor IA & Chatbot
                         </button>
                         <button type="button" @click.prevent="activeTab = 'prompts'" :class="activeTab === 'prompts' ? 'border-brandDark text-brandDark' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-1 border-b-2 font-bold text-sm uppercase tracking-wider transition-colors">
                             <i class="fa-solid fa-robot mr-1"></i> Prompts IA
@@ -96,10 +96,9 @@
                                     <p class="text-xs text-gray-500 mt-1">Configura manualmente los colores y fuente de tu marca o usa el botón mágico según el giro del negocio.</p>
                                 </div>
 
-                                <!-- Botón Mágico por Giro de Negocio (conectado directamente a brandAndContactSettings) -->
+                                <!-- Botón Mágico por Giro de Negocio -->
                                 <div class="p-5 bg-white rounded-3xl border border-gray-200 shadow-sm w-full md:w-auto md:min-w-[460px]">
                                     <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                                        <!-- Selector Principal -->
                                         <div class="flex-1">
                                             <select x-model="giro" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-indigo-500 font-semibold text-xs transition-colors">
                                                 <option value="">-- Elige un Giro de Negocio --</option>
@@ -115,7 +114,6 @@
                                             </select>
                                         </div>
 
-                                        <!-- Botón Mágico -->
                                         <button type="button" @click.prevent="generarConfiguracionIA()" :disabled="isGenerating" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed">
                                             <span x-show="!isGenerating" class="flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Botón Mágico</span>
                                             <span x-show="isGenerating" style="display: none;" class="flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin"></i> Generando...</span>
@@ -430,7 +428,7 @@
                                             <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Modelo por Defecto (Editor)</label>
                                             <select name="ai_default_model" class="w-full rounded-xl border-gray-300 text-sm">
                                                 @foreach($aiModels as $modelKey => $modelInfo)
-                                                    <option value="{{ $modelKey }}" {{ ($settings['ai_default_model'] ?? 'gemini-2.5-flash') === $modelKey ? 'selected' : '' }}>
+                                                    <option value="{{ $modelKey }}" {{ ($settings['ai_default_model'] ?? 'gemini-3.8-flash') === $modelKey ? 'selected' : '' }}>
                                                         {{ $modelInfo['label'] }}
                                                     </option>
                                                 @endforeach
@@ -497,12 +495,14 @@
                                 </div>
                             </div>
 
-                            <!-- 2. CONFIGURACIÓN DEL CHATBOT PÚBLICO -->
+                            <!-- 2. CONFIGURACIÓN DEL CHATBOT PÚBLICO (ÚNICO BLOQUE ACTIVO) -->
                             <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-5">
                                 <div class="flex items-center justify-between pb-4 border-b border-gray-200">
                                     <div>
-                                        <h3 class="text-base font-bold text-gray-900">Asistente Virtual / Chatbot del Sitio Público</h3>
-                                        <p class="text-xs text-gray-500">Muestra un widget de atención con IA en el frontend capaz de responder dudas y capturar leads.</p>
+                                        <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                                            <i class="fa-solid fa-robot text-indigo-600"></i> Asistente Virtual / Chatbot del Sitio Público
+                                        </h3>
+                                        <p class="text-xs text-gray-500">Muestra un widget de atención con IA en el frontend capaz de responder dudas y capturar leads directo al CRM.</p>
                                     </div>
                                     <label class="inline-flex items-center cursor-pointer">
                                         <input type="hidden" name="chatbot_enabled" value="0">
@@ -517,6 +517,7 @@
                                         <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Nombre del Asistente</label>
                                         <input type="text" name="chatbot_name"
                                                value="{{ $settings['chatbot_name'] ?? 'Asistente Virtual' }}"
+                                               placeholder="Ej. Sofía - Asesora Web"
                                                class="w-full rounded-xl border-gray-300 text-sm">
                                     </div>
 
@@ -524,7 +525,7 @@
                                         <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Modelo del Chatbot</label>
                                         <select name="chatbot_model" class="w-full rounded-xl border-gray-300 text-sm">
                                             @foreach($aiModels as $modelKey => $modelInfo)
-                                                <option value="{{ $modelKey }}" {{ ($settings['chatbot_model'] ?? 'gemini-2.5-flash-lite') === $modelKey ? 'selected' : '' }}>
+                                                <option value="{{ $modelKey }}" {{ ($settings['chatbot_model'] ?? 'gemini-3.5-flash-lite') === $modelKey ? 'selected' : '' }}>
                                                     {{ $modelInfo['label'] }}
                                                 </option>
                                             @endforeach
@@ -534,7 +535,7 @@
                                     <div>
                                         <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Mensaje de Bienvenida</label>
                                         <input type="text" name="chatbot_welcome"
-                                               value="{{ $settings['chatbot_welcome'] ?? '¡Hola! ¿En qué puedo ayudarte hoy?' }}"
+                                               value="{{ $settings['chatbot_welcome'] ?? '¡Hola! 👋 ¿En qué puedo ayudarte hoy?' }}"
                                                class="w-full rounded-xl border-gray-300 text-sm">
                                     </div>
                                 </div>
@@ -544,6 +545,9 @@
                                     <textarea name="chatbot_context" rows="4"
                                               placeholder="Describe aquí los servicios de la empresa, horarios, ubicación, tono de atención y reglas para pedir datos de contacto..."
                                               class="w-full rounded-xl border-gray-300 text-sm">{{ $settings['chatbot_context'] ?? 'Eres el asistente virtual oficial del sitio web. Responde de forma amable, breve y profesional. Si el usuario muestra interés en cotizar o contratar un servicio, pídele su nombre y número de WhatsApp para que un asesor lo contacte.' }}</textarea>
+                                    <p class="text-[11px] text-gray-500 mt-1">
+                                        <i class="fa-solid fa-circle-info text-indigo-500"></i> Además de este texto, el chatbot leerá automáticamente tus Páginas publicadas, Blog y teléfonos oficiales.
+                                    </p>
                                 </div>
                             </div>
 

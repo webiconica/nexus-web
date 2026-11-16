@@ -270,5 +270,6 @@
     <?php echo $__env->make('partials.app-scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <?php if(isset($globalSettings['body_end_scripts']) && !empty(trim($globalSettings['body_end_scripts']))): ?><?php echo trim($globalSettings['body_end_scripts']); ?><?php endif; ?>
+    <?php echo $__env->make('partials.chatbot-widget', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </body>
 </html><?php /**PATH C:\laragon\www\nexus-web\resources\views/layouts/web.blade.php ENDPATH**/ ?>
