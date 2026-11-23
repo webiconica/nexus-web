@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToTenant;
 
 class Page extends Model
 {
+    use BelongsToTenant;
     protected $fillable = [
         'title',
         'slug',

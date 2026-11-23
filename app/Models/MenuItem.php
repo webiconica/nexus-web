@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\BelongsToTenant;
+
 
 class MenuItem extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $fillable = [
@@ -76,7 +79,7 @@ class MenuItem extends Model
         });
 
         static::deleted(function () {
-            Cache::forget('header_menu_tree');
+            Cache::forget('header_menu_tree_' . \App\Services\TenantContext::id());
         });
     }
 }

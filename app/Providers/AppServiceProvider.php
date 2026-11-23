@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\MenuItem;
 use App\Models\Setting;
-use Illuminate\Support\Facades\View;
+use App\Services\TenantContext;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,95 +29,61 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (Schema::hasTable('settings')) {
-            $globalSettings = Cache::remember('global_settings', 60 * 60 * 24, function () {
-                return Setting::pluck('value', 'key')->toArray();
-            });
-            View::share('globalSettings', $globalSettings);
-        }
+        View::composer('*', function ($view) {
+            $tenantId = TenantContext::id();
 
-        // Árbol de menú dinámico para sitios corporativos / de negocio
-        $headerMenu = Cache::remember('header_menu_tree', 60 * 60 * 24, function () {
-            if (Schema::hasTable('menu_items')) {
-                return \App\Models\MenuItem::getTree('header');
+            if (Schema::hasTable('settings')) {
+                $globalSettings = Cache::remember("global_settings_tenant_{$tenantId}", 60 * 60 * 24, function () {
+                    return Setting::pluck('value', 'key')->toArray();
+                });
+                $view->with('globalSettings', $globalSettings);
             }
 
-            // Estructura universal para cualquier empresa o negocio (con soporte de sub-botones y botón CTA)
-            return [
-                [
-                    'title' => 'Inicio',
-                    'url' => '/',
-                    'target' => '_self',
-                    'is_button' => false,
-                    'children' => []
-                ],
-                [
-                    'title' => 'Nosotros',
-                    'url' => '/quienes-somos',
-                    'target' => '_self',
-                    'is_button' => false,
-                    'children' => []
-                ],
-                [
-                    'title' => 'Servicios',
-                    'url' => '/#servicios',
-                    'target' => '_self',
-                    'is_button' => false,
-                    'children' => [
-                        [
-                            'title' => 'Consultoría Especializada',
-                            'url' => '/servicios/consultoria',
-                            'target' => '_self',
-                            'is_button' => false,
-                            'children' => []
-                        ],
-                        [
-                            'title' => 'Soluciones',
-                            'url' => '/servicios/corporativos',
-                            'target' => '_self',
-                            'is_button' => false,
-                            'children' => []
-                        ],
-                        [
-                            'title' => 'Planes y Paquetes',
-                            'url' => '/#planes',
-                            'target' => '_self',
-                            'is_button' => false,
-                            'children' => []
-                        ],
-                    ]
-                ],
-                [
-                    'title' => 'Preguntas Frecuentes',
-                    'url' => '/#faq',
-                    'target' => '_self',
-                    'is_button' => false,
-                    'children' => []
-                ],
-                [
-                    'title' => 'Blog',
-                    'url' => '/blog',
-                    'target' => '_self',
-                    'is_button' => false,
-                    'children' => []
-                ],
-                [
-                    'title' => 'Contacto',
-                    'url' => '/#contacto',
-                    'target' => '_self',
-                    'is_button' => false,
-                    'children' => []
-                ],
-                [
-                    'title' => 'Cotizar Proyecto',
-                    'url' => '/#cotizador',
-                    'target' => '_self',
-                    'is_button' => true, // Marcado como botón destacado para headers que usen CTA
-                    'children' => []
-                ]
-            ];
-        });
+            $headerMenu = Cache::remember("header_menu_tree_tenant_{$tenantId}", 60 * 60 * 24, function () {
+                if (Schema::hasTable('menu_items')) {
+                    return MenuItem::getTree('header');
+                }
 
-        View::share('headerMenu', $headerMenu);
+                return [
+                    [
+                        'title' => 'Inicio',
+                        'url' => '/',
+                        'target' => '_self',
+                        'is_button' => false,
+                        'children' => []
+                    ],
+                    [
+                        'title' => 'Nosotros',
+                        'url' => '/quienes-somos',
+                        'target' => '_self',
+                        'is_button' => false,
+                        'children' => []
+                    ],
+                    [
+                        'title' => 'Servicios',
+                        'url' => '/#servicios',
+                        'target' => '_self',
+                        'is_button' => false,
+                        'children' => []
+                    ],
+                    [
+                        'title' => 'Blog',
+                        'url' => '/blog',
+                        'target' => '_self',
+                        'is_button' => false,
+                        'children' => []
+                    ],
+                    [
+                        'title' => 'Contacto',
+                        'url' => '/#contacto',
+                        'target' => '_self',
+                        'is_button' => false,
+                        'children' => []
+                    ],
+                ];
+            });
+
+            $view->with('headerMenu', $headerMenu);
+        });
     }
 }

@@ -188,34 +188,73 @@ EOT;
         }
     }
 
+    /**
+     * Registra o actualiza el prospecto capturado en la tabla leads evitando duplicados en la misma sesión
+     */
     protected function storeCapturedLead(array $data, ?string $ip): void
     {
         $phone = trim((string) ($data['lead_phone'] ?? ''));
         $email = trim((string) ($data['lead_email'] ?? ''));
-        $name = trim((string) ($data['lead_name'] ?? 'Visitante Chat IA')) ?: 'Visitante Chat IA';
-        $interest = trim((string) ($data['lead_interest'] ?? 'Consulta desde Chatbot IA'));
+        $name = trim((string) ($data['lead_name'] ?? ''));
+        $interest = trim((string) ($data['lead_interest'] ?? ''));
 
         $recentLeads = Lead::where('origen', 'Chatbot IA')
             ->where('created_at', '>=', now()->subHours(2))
+            ->latest()
             ->get();
+
+        $existingLead = null;
 
         foreach ($recentLeads as $recent) {
             $datos = is_array($recent->datos_formulario) ? $recent->datos_formulario : [];
-            if (($phone !== '' && ($datos['telefono'] ?? '') === $phone) ||
-                ($email !== '' && ($datos['email'] ?? '') === $email)) {
-                return;
+
+            $sameIp = !empty($ip) && ($datos['ip'] ?? '') === $ip;
+            $samePhone = $phone !== '' && ($datos['telefono'] ?? '') === $phone;
+            $sameEmail = $email !== '' && ($datos['email'] ?? '') === $email;
+
+            if ($sameIp || $samePhone || $sameEmail) {
+                $existingLead = $recent;
+                break;
             }
+        }
+
+        if ($existingLead) {
+            $current = is_array($existingLead->datos_formulario) ? $existingLead->datos_formulario : [];
+
+            // Conservar el nombre más completo (ej. "Julio Iglesias" sobre "Julio")
+            $bestName = $current['nombre'] ?? 'Visitante Chat IA';
+            if ($name !== '' && mb_strlen($name) >= mb_strlen($bestName)) {
+                $bestName = $name;
+            }
+
+            // Combinar intereses si aportó nuevos detalles
+            $bestInterest = $current['interes'] ?? '';
+            if ($interest !== '' && !str_contains($bestInterest, $interest)) {
+                $bestInterest = $bestInterest !== '' ? "{$bestInterest} | {$interest}" : $interest;
+            }
+
+            $existingLead->update([
+                'datos_formulario' => array_filter([
+                    'nombre'   => $bestName,
+                    'telefono' => $phone !== '' ? $phone : ($current['telefono'] ?? null),
+                    'email'    => $email !== '' ? $email : ($current['email'] ?? null),
+                    'interes'  => $bestInterest ?: 'Consulta desde Chatbot IA',
+                    'ip'       => $ip ?: ($current['ip'] ?? null),
+                ]),
+            ]);
+
+            return;
         }
 
         Lead::create([
             'tenant_id' => 1,
             'origen' => 'Chatbot IA',
             'datos_formulario' => array_filter([
-                'nombre' => $name,
+                'nombre'   => $name !== '' ? $name : 'Visitante Chat IA',
                 'telefono' => $phone ?: null,
-                'email' => $email ?: null,
-                'interes' => $interest,
-                'ip' => $ip,
+                'email'    => $email ?: null,
+                'interes'  => $interest !== '' ? $interest : 'Consulta desde Chatbot IA',
+                'ip'       => $ip,
             ]),
         ]);
     }

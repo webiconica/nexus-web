@@ -17,35 +17,77 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased bg-brandBg text-gray-800">
+        @php
+            $currentTenant = \App\Services\TenantContext::current();
+            $crmOnly       = $currentTenant?->crm_only_mode ?? false;
+            $isMainTenant  = ($currentTenant?->id ?? 1) === 1;
+        @endphp
+
         <div class="min-h-screen bg-gray-50 flex">
             
             <aside class="w-64 bg-white shadow-lg h-screen fixed top-0 left-0 flex flex-col z-50">
-                <div class="h-20 flex items-center justify-center border-b border-gray-100">
+                <div class="h-20 flex flex-col items-center justify-center border-b border-gray-100 px-4">
                     <span class="text-2xl font-bold text-brandDark tracking-widest uppercase">Webicónica</span>
+                    @if($currentTenant && $currentTenant->id !== 1)
+                        <span class="text-[11px] font-semibold text-gray-400 truncate max-w-full">{{ $currentTenant->name }}</span>
+                    @endif
                 </div>
+
                 <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('dashboard') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
-                        <i class="fas fa-chart-pie w-5 text-center"></i> Dashboard / Leads
+                    <!-- MÓDULOS PROTAGONISTAS: CRM & CHATBOT -->
+                    <a href="{{ route('admin.crm.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.crm.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                        <i class="fas fa-comments-dollar w-5 text-center"></i> CRM & Chatbot
                     </a>
-                    <a href="{{ route('admin.pages.index') ?? '#' }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.pages.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
-                        <i class="fas fa-file-lines w-5 text-center"></i> Páginas
+
+                    <a href="{{ route('admin.integrations.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.integrations.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                        <i class="fas fa-plug w-5 text-center"></i> Webhooks & Meta CAPI
                     </a>
-                    <a href="{{ route('admin.menu.index') ?? '#' }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.menu.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
-                        <i class="fas fa-compass w-5 text-center"></i> Menú Principal
-                    </a>
-                    <a href="{{ route('admin.posts.index') ?? '#' }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.posts.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
-                        <i class="fas fa-pen-nib w-5 text-center"></i> Blog / Entradas
-                    </a>
-                    <a href="{{ route('admin.media.index') ?? '#' }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.media.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
-                        <i class="fas fa-images w-5 text-center"></i> Multimedia
-                    </a>
-                    <a href="{{ route('admin.settings.index') ?? '#' }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.settings.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+
+                    @if($isMainTenant)
+                        <a href="{{ route('admin.tenants.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.tenants.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                            <i class="fas fa-building w-5 text-center"></i> Clientes Multi-Tenant
+                        </a>
+                    @endif
+
+                    <div class="border-t border-gray-100 my-2"></div>
+
+                    <!-- MÓDULOS WEB CMS (Se ocultan si el cliente solo contrató Chat + CRM) -->
+                    @unless($crmOnly)
+                        <a href="{{ route('dashboard') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('dashboard') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                            <i class="fas fa-chart-pie w-5 text-center"></i> Resumen General
+                        </a>
+                        <a href="{{ route('admin.pages.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.pages.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                            <i class="fas fa-file-lines w-5 text-center"></i> Páginas
+                        </a>
+                        <a href="{{ route('admin.menu.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.menu.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                            <i class="fas fa-compass w-5 text-center"></i> Menú Principal
+                        </a>
+                        <a href="{{ route('admin.posts.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.posts.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                            <i class="fas fa-pen-nib w-5 text-center"></i> Blog / Entradas
+                        </a>
+                        <a href="{{ route('admin.media.index') }}"
+                           class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.media.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                            <i class="fas fa-images w-5 text-center"></i> Multimedia
+                        </a>
+                    @endunless
+
+                    <a href="{{ route('admin.settings.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.settings.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
                         <i class="fas fa-cogs w-5 text-center"></i> Configuración Global
                     </a>
-                    <a href="{{ route('admin.manual.index') ?? '#' }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.manual.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
+                    <a href="{{ route('admin.manual.index') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 {{ request()->routeIs('admin.manual.*') ? 'bg-brandDark text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-brandDark' }}">
                         <i class="fas fa-book-open w-5 text-center"></i> Manual del Sistema
                     </a>
                 </nav>
+
                 <div class="p-4 border-t border-gray-100">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -66,7 +108,10 @@
                 @endisset
 
                 <main class="flex-1 p-6">
-                    {{ $slot }}
+                    @yield('content')
+                    @isset($slot)
+                        {{ $slot }}
+                    @endisset
                 </main>
             </div>
         </div>
@@ -83,7 +128,6 @@
             return {
                 editor: null,
                 init() {
-                    // 1. Recuperar el código fuente de forma hermética desde el JSON
                     let rawContent = '';
                     try {
                         rawContent = JSON.parse(this.$refs.initialData.textContent);
@@ -91,10 +135,8 @@
                         console.error('Error al desempaquetar el contenido:', e);
                     }
                     
-                    // 2. Asignarlo al textarea antes de inicializar CodeMirror
                     this.$refs.textarea.value = rawContent;
 
-                    // 3. Inicializar CodeMirror
                     this.editor = CodeMirror.fromTextArea(this.$refs.textarea, {
                         lineNumbers: true,
                         mode: 'htmlmixed',
@@ -104,7 +146,6 @@
                         lineWrapping: false
                     });
 
-                    // Sincronizar el contenido antes de guardar el formulario de Laravel
                     const parentForm = this.$refs.textarea.form;
                     if (parentForm) {
                         parentForm.addEventListener('submit', () => {
@@ -112,7 +153,6 @@
                         });
                     }
 
-                    // Mantener el textarea oculto sincronizado al teclear
                     this.editor.on('change', (instance) => {
                         this.$refs.textarea.value = instance.getValue();
                     });
@@ -126,7 +166,6 @@
                         indent_char: ' ',
                         max_preserve_newlines: 2,
                         preserve_newlines: true,
-                        // Reglas extra para evitar que destruya el diseño:
                         unformatted: ['script', 'style', 'code', 'span', 'a', 'textarea'],
                         wrap_line_length: 0
                     });
