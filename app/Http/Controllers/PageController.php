@@ -6,6 +6,9 @@ use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+use App\Models\Setting;
+use App\Models\Media; // O el modelo/carpeta donde guardas las imágenes subidas
+
 class PageController extends Controller
 {
     // 1. Vista pública para renderizar la landing dinámica
@@ -25,7 +28,57 @@ class PageController extends Controller
     // 3. Formulario de creación
     public function create()
     {
-        return view('pages.create');
+        $settings = Setting::whereIn('key', [
+            'site_name',
+            'site_description',
+            'tailwind_config_script',
+            'contact_directory_json',
+            'turnstile_widget_code',
+            'whatsapp_number',
+        ])->pluck('value', 'key');
+    
+        // Formatear teléfonos y redes reales del directorio[cite: 11]
+        $contactLines = [];
+        if (!empty($settings['contact_directory_json'])) {
+            $dir = json_decode($settings['contact_directory_json'], true);
+            foreach ($dir['phones'] ?? [] as $p) {
+                if (empty($p['number'])) continue;
+                $clean = preg_replace('/[^0-9]/', '', $p['number']);
+                $uso = [];
+                if (!empty($p['is_whatsapp'])) $uso[] = "WhatsApp (https://wa.me/{$clean})";
+                if (!empty($p['is_call'])) $uso[] = "Llamadas directas (tel:{$clean})";
+                $contactLines[] = "- {$p['label']}: {$p['number']} [" . implode(', ', $uso) . "]";
+            }
+            foreach ($dir['socials'] ?? [] as $s) {
+                if (!empty($s['url'])) {
+                    $contactLines[] = "- {$s['network']}: {$s['url']}";
+                }
+            }
+        }
+    
+        // Obtener Turnstile real o fallback de .env[cite: 11]
+        $turnstileCode = trim($settings['turnstile_widget_code'] ?? '');
+        if (empty($turnstileCode) && env('TURNSTILE_SITE_KEY')) {
+            $turnstileCode = '<div class="cf-turnstile my-3" data-sitekey="' . env('TURNSTILE_SITE_KEY') . '"></div>';
+        }
+    
+        $promptDefaults = [
+            'site_name'        => $settings['site_name'] ?? config('app.name'),
+            'site_description' => $settings['site_description'] ?? '',
+            'tailwind_config'  => $settings['tailwind_config_script'] ?? '',
+            'contact_info'     => implode("\n", $contactLines),
+            'turnstile_code'   => $turnstileCode,
+        ];
+    
+        // Últimas imágenes subidas en /admin/media para seleccionarlas con un clic
+        $mediaLibrary = class_exists(Media::class)
+            ? Media::latest()->take(30)->get()->map(fn($m) => [
+                'url'  => asset('storage/' . ltrim($m->path ?? $m->file_path, '/')),
+                'name' => $m->filename ?? basename($m->path ?? ''),
+            ])
+            : [];
+    
+        return view('pages.create', compact('promptDefaults', 'mediaLibrary'));
     }
 
     // 4. Guardar la nueva página en la BD

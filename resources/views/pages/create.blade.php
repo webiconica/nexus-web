@@ -1,10 +1,13 @@
 <x-app-layout>
-    <x-slot name="header">
+<x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-bold text-2xl text-brandDark uppercase tracking-widest leading-tight">
                 {{ __('Crear Nueva Página') }}
             </h2>
             <div class="flex items-center gap-3">
+                {{-- Botón + Modal del Generador de Prompts (Copiar y Pegar) --}}
+                @include('admin.partials.prompt-generator-modal')
+
                 @include('admin.partials.ai-generator-modal', ['module' => 'pages'])
                 <a href="{{ route('admin.pages.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl transition text-sm">
                     <i class="fas fa-arrow-left mr-2"></i> Volver
