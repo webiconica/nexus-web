@@ -76,10 +76,12 @@ class MenuItem extends Model
     {
         static::saved(function () {
             Cache::forget('header_menu_tree');
+            Cache::forget('header_menu_tree_tenant_' . \App\Services\TenantContext::id());
         });
 
         static::deleted(function () {
-            Cache::forget('header_menu_tree_' . \App\Services\TenantContext::id());
+            Cache::forget('header_menu_tree');
+            Cache::forget('header_menu_tree_tenant_' . \App\Services\TenantContext::id());
         });
     }
 }

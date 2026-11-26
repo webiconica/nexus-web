@@ -41,6 +41,7 @@ class MenuController extends Controller
 
         MenuItem::create($validated);
         Cache::forget('header_menu_tree');
+        Cache::forget('header_menu_tree_tenant_' . \App\Services\TenantContext::id());
 
         return redirect()->route('admin.menu.index')->with('success', 'Elemento añadido al menú correctamente.');
     }
@@ -57,6 +58,7 @@ class MenuController extends Controller
         $validated['is_button'] = $request->has('is_button');
         $menuItem->update($validated);
         Cache::forget('header_menu_tree');
+        Cache::forget('header_menu_tree_tenant_' . \App\Services\TenantContext::id());
 
         return redirect()->route('admin.menu.index')->with('success', 'Elemento actualizado correctamente.');
     }
@@ -65,6 +67,7 @@ class MenuController extends Controller
     {
         $menuItem->delete();
         Cache::forget('header_menu_tree');
+        Cache::forget('header_menu_tree_tenant_' . \App\Services\TenantContext::id());
 
         return redirect()->route('admin.menu.index')->with('success', 'Elemento eliminado del menú.');
     }
@@ -81,6 +84,7 @@ class MenuController extends Controller
         }
 
         Cache::forget('header_menu_tree');
+        Cache::forget('header_menu_tree_tenant_' . \App\Services\TenantContext::id());
 
         return response()->json(['status' => 'success']);
     }
