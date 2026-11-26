@@ -73,8 +73,104 @@
         <p x-text="toast.message"></p>
     </div>
 
-    {{-- HEADER MODULAR CONECTADO DESDE PARTIALS --}}
-    @include('partials.header')
+    <!-- HEADER DINÁMICO MARCA BLANCA -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo del Sitio -->
+                <a href="/" class="flex items-center gap-3 group">
+                    @if(!empty($globalSettings['header_logo']))
+                        <img src="{{ asset('storage/' . $globalSettings['header_logo']) }}" alt="{{ $globalSettings['site_name'] ?? 'Logo' }}" class="h-10 w-auto object-contain">
+                    @else
+                        <span class="text-2xl font-black tracking-tight text-gray-900">
+                            {{ $globalSettings['site_name'] ?? 'Mi Empresa' }}
+                        </span>
+                    @endif
+                </a>
+
+                <!-- Navegación Principal ($headerMenu) Desktop -->
+                <nav class="hidden md:flex items-center gap-8 font-semibold text-sm text-gray-600">
+                    @if(isset($headerMenu))
+                        @foreach($headerMenu as $item)
+                            @if(empty($item['children']))
+                                <a href="{{ $item['url'] }}" target="{{ $item['target'] ?? '_self' }}" 
+                                   class="{{ !empty($item['is_button']) ? 'px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-bold transition-all shadow-sm' : 'hover:text-gray-900 transition-colors' }}">
+                                    {{ $item['title'] }}
+                                </a>
+                            @else
+                                <div x-data="{ openDropdown: false }" @mouseenter="openDropdown = true" @mouseleave="openDropdown = false" class="relative py-2">
+                                    <a href="{{ $item['url'] }}" class="hover:text-gray-900 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                                        {{ $item['title'] }}
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="openDropdown ? 'rotate-180 text-gray-900' : ''"></i>
+                                    </a>
+                                    <div x-show="openDropdown" x-transition 
+                                         class="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50" style="display: none;">
+                                        @foreach($item['children'] as $subItem)
+                                            <a href="{{ $subItem['url'] }}" target="{{ $subItem['target'] ?? '_self' }}" 
+                                               class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 font-medium transition">
+                                                {{ $subItem['title'] }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    @endif
+                </nav>
+
+                <!-- Botón de Contacto Rápido / WhatsApp Desktop -->
+                <div class="hidden md:flex items-center gap-4">
+                    @php $whaNumber = $globalSettings['whatsapp_number'] ?? ''; @endphp
+                    @if(!empty($whaNumber))
+                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $whaNumber) }}?text=Hola!%20Me%20gustar%C3%ADa%20solicitar%20informaci%C3%B3n." target="_blank" class="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold transition-all flex items-center gap-2 text-sm">
+                            <i class="fa-brands fa-whatsapp text-lg text-emerald-600"></i>
+                            <span>Contacto</span>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Botón Menú Mobile -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-700 hover:text-gray-900 p-2 rounded-lg focus:outline-none">
+                    <i class="fa-solid" :class="mobileMenuOpen ? 'fa-xmark text-2xl' : 'fa-bars text-2xl'"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menú Móvil Desplegable -->
+        <div x-show="mobileMenuOpen" x-transition class="md:hidden bg-white border-b border-gray-200 px-6 pt-2 pb-6 space-y-3 shadow-lg" style="display: none;">
+            @if(isset($headerMenu))
+                @foreach($headerMenu as $item)
+                    @if(empty($item['children']))
+                        <a href="{{ $item['url'] }}" target="{{ $item['target'] ?? '_self' }}" @click="mobileMenuOpen = false" class="block py-2 text-gray-800 hover:text-gray-900 font-semibold">
+                            {{ $item['title'] }}
+                        </a>
+                    @else
+                        <div x-data="{ subOpen: false }" class="space-y-2">
+                            <button @click="subOpen = !subOpen" class="w-full flex justify-between items-center py-2 text-gray-800 font-semibold">
+                                <span>{{ $item['title'] }}</span>
+                                <i class="fa-solid fa-chevron-down text-xs transition-transform" :class="subOpen ? 'rotate-180' : ''"></i>
+                            </button>
+                            <div x-show="subOpen" x-transition class="pl-4 border-l-2 border-gray-200 space-y-2">
+                                @foreach($item['children'] as $subItem)
+                                    <a href="{{ $subItem['url'] }}" target="{{ $subItem['target'] ?? '_self' }}" @click="mobileMenuOpen = false" class="block text-sm font-medium text-gray-600 hover:text-gray-900">
+                                        {{ $subItem['title'] }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            @endif
+
+            @if(!empty($whaNumber))
+                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $whaNumber) }}?text=Hola!%20Me%20gustar%C3%ADa%20solicitar%20informaci%C3%B3n." target="_blank" class="w-full mt-4 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-bold text-center flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-lg text-emerald-400"></i>
+                    <span>Contactar por WhatsApp</span>
+                </a>
+            @endif
+        </div>
+    </header>
 
     {{-- ÁREA PRINCIPAL UNIFICADA (Soporta yield y slot) --}}
     <main class="min-h-screen">
