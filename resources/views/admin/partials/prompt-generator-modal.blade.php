@@ -192,10 +192,10 @@
     <!-- Modal teletransportado al <body> -->
     <template x-teleport="body">
         <div x-show="isOpen" style="display: none;"
+             @click.self="if(!mediaPickerOpen) isOpen = false"
              class="fixed inset-0 z-[110] flex items-center justify-center bg-brandDark/80 backdrop-blur-sm p-4"
              x-transition>
-            <div @click.away="if(!mediaPickerOpen) isOpen = false"
-                 class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-gray-100">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-gray-100">
 
                 <!-- Encabezado del Modal -->
                 <div class="px-6 py-4 bg-brandDark text-white flex items-center justify-between gap-4 shrink-0">
@@ -593,14 +593,15 @@
 
             <!-- Sub-Modal: Selector rápido de imágenes -->
             <div x-show="mediaPickerOpen" style="display: none;"
+                 @click.self.stop="mediaPickerOpen = false"
                  class="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-4">
-                <div @click.away="mediaPickerOpen = false"
+                <div @click.stop
                      class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[75vh] flex flex-col overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                         <h4 class="font-bold text-brandDark uppercase tracking-wider text-sm flex items-center gap-2">
                             <i class="fas fa-images"></i> Seleccionar Imágenes de la Biblioteca
                         </h4>
-                        <button type="button" @click="mediaPickerOpen = false"
+                        <button type="button" @click.stop="mediaPickerOpen = false"
                                 class="bg-brandDark text-white px-4 py-1.5 rounded-xl text-xs font-bold">
                             Listo (<span x-text="images.length"></span>)
                         </button>
@@ -614,7 +615,7 @@
 
                         <div x-show="!loadingMedia" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                             <template x-for="item in mediaList" :key="item.url">
-                                <div @click="toggleMediaImage(item.url)"
+                                <div @click.stop="toggleMediaImage(item.url)"
                                      :class="images.some(i => i.url === item.url) ? 'ring-4 ring-brandLight border-brandDark' : 'border-gray-200'"
                                      class="cursor-pointer bg-white rounded-xl border overflow-hidden hover:shadow-md transition relative">
                                     <div class="aspect-square bg-gray-100 relative">
